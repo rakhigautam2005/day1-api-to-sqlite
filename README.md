@@ -43,13 +43,14 @@ All 3 tests pass. The API is mocked, so tests run offline in under a second.
 
 ## Design choices
 
-- **Timeouts and error checks:** every HTTP call has a 10-second timeout and fails loudly on 4xx/5xx errors.
-- **Idempotent saves:** rows are upserted on a primary key, so running the script twice never creates duplicates.
+- **Validation at the boundary:** every post is checked with a Pydantic model. Bad records are skipped and logged, so one broken post never stops the job.
+- **Retries with exponential backoff:** timeouts, 429 and 5xx errors are retried (1s, 2s), then the job fails cleanly. 4xx errors fail fast with no retry.
+- **Structured logging:** timestamped logs with levels replace print statements.
+- **Clean failure:** a custom `FetchError` is caught in `main.py`, logged as one clear error, and the process exits with code 1.
+- **Idempotent saves:** rows are upserted on a primary key, so reruns never create duplicates.
 - **Safe SQL:** all queries use `?` placeholders to prevent SQL injection.
 - **Config outside code:** settings live in `.env` (not committed). `.env.example` shows what is needed.
-- **Separation of concerns:** fetch, database and entry point are separate modules, so each is tested alone.
 
-## Next steps
+## Tests
 
-- Validate API responses with Pydantic
-- Add retries with exponential backoff and logging
+8 tests cover: saving, no duplicates on rerun, validation, retry on 503, retry on timeout, no retry on 404, and giving up after max attempts. The API and the clock are faked, so tests run offline in under a second.

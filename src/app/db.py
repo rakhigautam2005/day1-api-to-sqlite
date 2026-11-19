@@ -1,8 +1,7 @@
-# connect: open the database file, create the table if missing
-# save_posts: turn each dict into a row, save all in one go, report how many
-# count_posts: count rows so I can prove it worked
 import sqlite3
 from pathlib import Path
+
+from app.models import Post
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS posts (
@@ -21,11 +20,10 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
     return conn
 
 
-def save_posts(conn: sqlite3.Connection, posts: list[dict]) -> int:
+def save_posts(conn: sqlite3.Connection, posts: list[Post]) -> int:
     """Insert or update posts. Return how many rows were written."""
-    # translate: API dict -> database row (userId becomes user_id)
-    rows = [(p["id"], p["userId"], p["title"], p["body"]) for p in posts]
-    with conn:  # one transaction: all rows saved, or none
+    rows = [(p.id, p.user_id, p.title, p.body) for p in posts]
+    with conn:
         conn.executemany(
             "INSERT OR REPLACE INTO posts (id, user_id, title, body) VALUES (?, ?, ?, ?)",
             rows,

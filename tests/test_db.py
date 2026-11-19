@@ -1,8 +1,9 @@
 from app.db import connect, count_posts, save_posts
+from app.models import Post
 
 FAKE_POSTS = [
-    {"userId": 1, "id": 1, "title": "a", "body": "x"},
-    {"userId": 1, "id": 2, "title": "b", "body": "y"},
+    Post(id=1, userId=1, title="a", body="x"),
+    Post(id=2, userId=1, title="b", body="y"),
 ]
 
 
